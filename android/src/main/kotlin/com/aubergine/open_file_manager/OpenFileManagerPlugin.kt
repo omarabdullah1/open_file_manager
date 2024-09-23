@@ -45,7 +45,7 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun openFileManager(result: Result, folderType: String?, subFolderPath: String?) {
         try {
-            Log.i("MyTag", "Folder type: $folderType, Sub-folder path: $subFolderPath")
+            Log.i("OpenFileManagerPlugin", "Folder type: $folderType, Sub-folder path: $subFolderPath")
 
             if (folderType == null || folderType == "download") {
                 val downloadIntent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
