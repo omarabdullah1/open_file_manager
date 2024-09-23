@@ -48,43 +48,25 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
             Log.i("OpenFileManagerPlugin", "Folder type: $folderType, Sub-folder path: $subFolderPath")
 
             if (folderType == null || folderType == "download") {
-                val downloadIntent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
-                downloadIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(downloadIntent)
-                result.success(true)
-            } else if (folderType == "recent") {
-                val uri = Environment.getExternalStorageDirectory().absolutePath
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-                intent.setDataAndType(Uri.parse(uri), "*/*")
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-                result.success(true)
+                // Open the Downloads folder
+                val folder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath)
+
+                if (folder.exists() && folder.isDirectory) {
+                    openFolder(result, folder)
+                } else {
+                    Log.e("OpenFileManagerPlugin", "Downloads folder does not exist.")
+                    result.error("FOLDER_NOT_FOUND", "Downloads folder does not exist.", null)
+                }
             } else if (folderType == "subFolder") {
-                // Validate the subFolderPath before proceeding
+                // Open the custom sub-folder
                 if (subFolderPath != null && subFolderPath.isNotEmpty()) {
                     val folder = File(subFolderPath)
 
                     if (folder.exists() && folder.isDirectory) {
-                        try {
-                            // Use FileProvider to get URI for the folder
-                            val uri: Uri = FileProvider.getUriForFile(
-                                context, 
-                                "${context.packageName}.fileprovider", // Must match the authority declared in AndroidManifest.xml
-                                folder // The folder to be accessed
-                            )
-
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.setDataAndType(uri, "resource/folder")
-                            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-                            context.startActivity(Intent.createChooser(intent, "Open folder"))
-                            result.success(true)
-                        } catch (e: Exception) {
-                            Log.e("OpenFileManagerPlugin", "Error opening sub-folder: ${e.localizedMessage}")
-                            result.error("FOLDER_ERROR", "Unable to open the folder: ${e.localizedMessage}", null)
-                        }
+                        openFolder(result, folder)
                     } else {
-                        Log.e("OpenFileManagerPlugin", "Folder does not exist or is not a directory: $subFolderPath")
-                        result.error("FOLDER_NOT_FOUND", "Folder does not exist or is not a directory", null)
+                        Log.e("OpenFileManagerPlugin", "Sub-folder does not exist or is not a directory: $subFolderPath")
+                        result.error("FOLDER_NOT_FOUND", "Sub-folder does not exist or is not a directory", null)
                     }
                 } else {
                     Log.e("OpenFileManagerPlugin", "Sub-folder path is null or empty")
@@ -93,7 +75,27 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
             }
         } catch (e: Exception) {
             Log.e("OpenFileManagerPlugin", "Exception: ${e.localizedMessage}")
-            result.error("$e", "Unable to open the file manager", "")
+            result.error("EXCEPTION", "Unable to open the file manager: ${e.localizedMessage}", null)
+        }
+    }
+
+    // Helper function to open a folder using FileProvider
+    private fun openFolder(result: Result, folder: File) {
+        try {
+            val uri: Uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider", // Authority must match what's declared in AndroidManifest.xml
+                folder
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(uri, "resource/folder")
+            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(Intent.createChooser(intent, "Open folder"))
+            result.success(true)
+        } catch (e: Exception) {
+            Log.e("OpenFileManagerPlugin", "Error opening folder: ${e.localizedMessage}")
+            result.error("FOLDER_ERROR", "Unable to open the folder: ${e.localizedMessage}", null)
         }
     }
 }
