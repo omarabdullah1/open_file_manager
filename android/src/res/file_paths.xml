@@ -1,0 +1,6 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Grant access to the external storage root directory -->
+    <external-path name="external" path="." />
+    <!-- Grant access specifically to the Downloads directory -->
+    <external-path name="download" path="Download/" />
+</paths>
