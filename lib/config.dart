@@ -2,8 +2,9 @@ part of 'open_file_manager.dart';
 
 final class AndroidConfig {
   final FolderType folderType;
+  final String subFolderPath;
 
-  AndroidConfig({required this.folderType});
+  AndroidConfig({required this.folderType,required this.subFolderPath});
 }
 
 final class IosConfig {
@@ -12,4 +13,4 @@ final class IosConfig {
   IosConfig({required this.subFolderPath});
 }
 
-enum FolderType { recent, download }
+enum FolderType { recent, download,subFolder, }
