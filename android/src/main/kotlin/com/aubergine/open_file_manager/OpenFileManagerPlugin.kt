@@ -10,6 +10,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import android.util.Log
 
 /** OpenFileManagerPlugin */
 class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
@@ -45,6 +46,8 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun openFileManager(result: Result, folderType: String?,subFolderPath: String?,) {
         try {
+            Log.i("MyTag", "This is an informational message1")
+
             if (folderType == null || folderType == "download") {
                 val downloadIntent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
                 downloadIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -58,6 +61,8 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
                 context.startActivity(intent)
                 result.success(true)
             }else if (folderType == "subFolder") {
+                Log.i("MyTag", "This is an informational message2")
+
                 val uri = subFolderPath
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
                 intent.setDataAndType(Uri.parse(uri), "*/*")
