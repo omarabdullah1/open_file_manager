@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import androidx.core.content.FileProvider
+import android.util.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -31,6 +32,10 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
                 val args = call.arguments as HashMap<*, *>?
                 val folderType = args?.get("folderType") as String?
                 val subFolderPath = args?.get("subFolderPath") as String?
+                
+                // Logging the values for debugging
+                Log.d("OpenFileManagerPlugin", "Folder type: $folderType, Sub-folder path: $subFolderPath")
+
                 openFileManager(result, folderType, subFolderPath)
             }
             else -> {
@@ -53,6 +58,7 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
                     openRecentFolder(result)
                 }
                 "subFolder" -> {
+                    // Ensure subFolderPath is valid
                     if (subFolderPath != null && subFolderPath.isNotEmpty()) {
                         openSubFolder(result, subFolderPath)
                     } else {
@@ -94,20 +100,28 @@ class OpenFileManagerPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun openSubFolder(result: Result, subFolderPath: String) {
         try {
-            val folder = File(subFolderPath)
-            if (folder.exists() && folder.isDirectory) {
-                val uri: Uri = FileProvider.getUriForFile(
-                    context, 
-                    "${context.packageName}.fileprovider", 
-                    folder
-                )
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.setDataAndType(uri, "resource/folder")
-                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(Intent.createChooser(intent, "Open folder"))
-                result.success(true)
+            Log.d("OpenFileManagerPlugin", "Attempting to open sub-folder: $subFolderPath")
+
+            // Validate folder path length
+            if (subFolderPath.length > 1) {
+                val folder = File(subFolderPath)
+                
+                if (folder.exists() && folder.isDirectory) {
+                    val uri: Uri = FileProvider.getUriForFile(
+                        context, 
+                        "${context.packageName}.fileprovider", 
+                        folder
+                    )
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.setDataAndType(uri, "resource/folder")
+                    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(Intent.createChooser(intent, "Open folder"))
+                    result.success(true)
+                } else {
+                    result.error("FOLDER_NOT_FOUND", "Sub-folder does not exist or is not a directory: $subFolderPath", null)
+                }
             } else {
-                result.error("FOLDER_NOT_FOUND", "Sub-folder does not exist or is not a directory: $subFolderPath", null)
+                result.error("INVALID_PATH", "Sub-folder path length is invalid: $subFolderPath", null)
             }
         } catch (e: Exception) {
             result.error("SUBFOLDER_ERROR", "Failed to open the sub-folder: ${e.localizedMessage}", null)
